@@ -1,0 +1,2126 @@
+ 
+--- C:\code-repos\BookingMx-Testing\README.md --- 
+# BookingMx
+
+Minimal vanilla JS + Spring Boot project to practice unit tests.
+
+## Run backend
+```bash
+cd backend
+mvn spring-boot:run
+```
+
+## Run frontend
+```bash
+cd frontend
+npm i
+npm run serve
+# http://localhost:5173
+```
+# BookingMx
+
+ 
+--- C:\code-repos\BookingMx-Testing\pom.xml --- 
+
+ 
+--- C:\code-repos\BookingMx-Testing\.dist\pom.xml --- 
+.
+ 
+--- C:\code-repos\BookingMx-Testing\.idea\pom.xml --- 
+
+ 
+--- C:\code-repos\BookingMx-Testing\backend\TESTING_NOTES.md --- 
+# Testing Notes (Backend)
+- Focus JUnit tests on service validations and behaviors (create/update/cancel).
+- Coverage report: target/site/jacoco/index.html
+
+This document reflects the main technical difficulties encountered during development and testing, as well as the strategies used to overcome them.  
+It aims to promote self-reflection, documentation of technical learning, and continuous improvement.
+
+No main technical issues encountered on the testing phase of the project.
+The project successfully integrates Cucumber gherking and Junit platform.
+
+ 
+--- C:\code-repos\BookingMx-Testing\backend\pom.xml --- 
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
+                             https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>com.bookingmx</groupId>
+    <artifactId>bookingmx-backend</artifactId>
+    <version>1.0.0</version>
+    <name>BookingMx Backend</name>
+    <description>Minimal reservations module for unit testing</description>
+
+    <properties>
+        <java.version>21</java.version>
+        <spring-boot.version>3.5.7</spring-boot.version>
+        <maven-surefire-plugin.version>3.2.5</maven-surefire-plugin.version>
+        <jacoco.version>0.8.14</jacoco.version>
+        <cucumber.version>7.18.1</cucumber.version>
+        <maven.compiler.source>21</maven.compiler.source>
+        <maven.compiler.target>21</maven.compiler.target>
+    </properties>
+
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-dependencies</artifactId>
+                <version>${spring-boot.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+            <dependency>
+                <groupId>io.cucumber</groupId>
+                <artifactId>cucumber-bom</artifactId>
+                <version>${cucumber.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+
+    <dependencies>
+        <!-- Spring Boot Web -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-web</artifactId>
+        </dependency>
+
+        <!-- Validation -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-validation</artifactId>
+        </dependency>
+
+        <!-- Spring Boot Test (includes JUnit 5) -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+
+        <!-- Cucumber Dependencies for JUnit 5 -->
+        <dependency>
+            <groupId>io.cucumber</groupId>
+            <artifactId>cucumber-java</artifactId>
+            <scope>test</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>io.cucumber</groupId>
+            <artifactId>cucumber-spring</artifactId>
+            <scope>test</scope>
+        </dependency>
+
+        <!-- Cucumber JUnit Platform Engine (JUnit 5 support) -->
+        <dependency>
+            <groupId>io.cucumber</groupId>
+            <artifactId>cucumber-junit-platform-engine</artifactId>
+            <scope>test</scope>
+        </dependency>
+
+        <!-- JUnit Platform Suite for running Cucumber -->
+        <dependency>
+            <groupId>org.junit.platform</groupId>
+            <artifactId>junit-platform-suite</artifactId>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <!-- Spring Boot Maven Plugin -->
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+                <version>${spring-boot.version}</version>
+            </plugin>
+
+            <!-- Maven Compiler Plugin -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.11.0</version>
+                <configuration>
+                    <source>21</source>
+                    <target>21</target>
+                    <release>21</release>
+                </configuration>
+            </plugin>
+
+            <!-- Maven Surefire Plugin (for running tests) -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>${maven-surefire-plugin.version}</version>
+                <configuration>
+                    <includes>
+                        <include>**/*Test.java</include>
+                        <include>**/*Tests.java</include>
+                        <include>**/*Runner.java</include>
+                    </includes>
+                    <useModulePath>false</useModulePath>
+                    <!-- Enable JUnit Platform for Cucumber -->
+                    <properties>
+                        <configurationParameters>
+                            cucumber.junit-platform.naming-strategy=long
+                        </configurationParameters>
+                    </properties>
+                </configuration>
+            </plugin>
+
+            <!-- JaCoCo Plugin (for code coverage) -->
+            <plugin>
+                <groupId>org.jacoco</groupId>
+                <artifactId>jacoco-maven-plugin</artifactId>
+                <version>${jacoco.version}</version>
+                <executions>
+                    <execution>
+                        <id>prepare-agent</id>
+                        <goals>
+                            <goal>prepare-agent</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>report</id>
+                        <phase>test</phase>
+                        <goals>
+                            <goal>report</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>check</id>
+                        <phase>test</phase>
+                        <goals>
+                            <goal>check</goal>
+                        </goals>
+                        <configuration>
+                            <rules>
+                                <rule>
+                                    <element>PACKAGE</element>
+                                    <limits>
+                                        <limit>
+                                            <counter>LINE</counter>
+                                            <value>COVEREDRATIO</value>
+                                            <minimum>0.90</minimum>
+                                        </limit>
+                                    </limits>
+                                </rule>
+                            </rules>
+                            <excludes>
+                                <!-- Exclude main application class from coverage -->
+                                <exclude>**/BookingMxApplication.class</exclude>
+                            </excludes>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+</project>
+ 
+--- C:\code-repos\BookingMx-Testing\backend\.idea\pom.xml --- 
+
+ 
+--- C:\code-repos\BookingMx-Testing\backend\.idea\inspectionProfiles\pom.xml --- 
+
+ 
+--- C:\code-repos\BookingMx-Testing\backend\docs\pom.xml --- 
+
+ 
+--- C:\code-repos\BookingMx-Testing\backend\src\pom.xml --- 
+
+ 
+--- C:\code-repos\BookingMx-Testing\backend\src\main\pom.xml --- 
+
+ 
+--- C:\code-repos\BookingMx-Testing\backend\src\main\java\pom.xml --- 
+
+ 
+--- C:\code-repos\BookingMx-Testing\backend\src\main\java\com\pom.xml --- 
+
+ 
+--- C:\code-repos\BookingMx-Testing\backend\src\main\java\com\bookingmx\pom.xml --- 
+
+ 
+--- C:\code-repos\BookingMx-Testing\backend\src\main\java\com\bookingmx\reservations\BookingMxApplication.java --- 
+package com.bookingmx.reservations;
+
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+
+@SpringBootApplication
+public class BookingMxApplication {
+    public static void main(String[] args) {
+        SpringApplication.run(BookingMxApplication.class, args);
+    }
+}
+
+ 
+--- C:\code-repos\BookingMx-Testing\backend\src\main\java\com\bookingmx\reservations\pom.xml --- 
+
+ 
+--- C:\code-repos\BookingMx-Testing\backend\src\main\java\com\bookingmx\reservations\controller\HealthController.java --- 
+package com.bookingmx.reservations.controller;
+
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+import java.util.Map;
+
+@RestController
+@RequestMapping("/actuator")
+public class HealthController {
+
+    @GetMapping("/health")
+    public ResponseEntity<Map<String, String>> health() {
+        return ResponseEntity.ok(Map.of("status", "UP"));
+    }
+}
+ 
+--- C:\code-repos\BookingMx-Testing\backend\src\main\java\com\bookingmx\reservations\controller\ReservationController.java --- 
+package com.bookingmx.reservations.controller;
+
+import com.bookingmx.reservations.dto.ReservationRequest;
+import com.bookingmx.reservations.dto.ReservationResponse;
+import com.bookingmx.reservations.exception.NotFoundException;
+import com.bookingmx.reservations.model.Reservation;
+import com.bookingmx.reservations.service.ReservationService;
+
+import jakarta.validation.Valid;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+
+@RestController
+@CrossOrigin(origins = {"http://localhost:5173", "http://127.0.0.1:5173", "*"})
+@RequestMapping(value = "/api/reservations", produces = MediaType.APPLICATION_JSON_VALUE)
+public class ReservationController {
+
+    private final ReservationService service;
+
+    public ReservationController(ReservationService service) {
+        this.service = service;
+    }
+
+    @GetMapping
+    public List<ReservationResponse> list() {
+        return service.list().stream()
+                .map(this::toResponse)
+                .toList();
+    }
+
+    @GetMapping("/{id}")
+    public ReservationResponse getById(@PathVariable("id") Long id) {
+        return service.getById(id)
+                .map(this::toResponse)
+                .orElseThrow(() -> new NotFoundException("Reservation not found"));
+    }
+
+    @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
+    @ResponseStatus(HttpStatus.CREATED)
+    public ReservationResponse create(@Valid @RequestBody ReservationRequest req) {
+        return toResponse(service.create(req));
+    }
+
+    @PutMapping(value = "/{id}", consumes = MediaType.APPLICATION_JSON_VALUE)
+    public ReservationResponse update(@PathVariable("id") Long id, @Valid @RequestBody ReservationRequest req) {
+        return toResponse(service.update(id, req));
+    }
+
+    @DeleteMapping("/{id}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void cancel(@PathVariable("id") Long id) {
+        service.cancel(id);
+    }
+
+    private ReservationResponse toResponse(Reservation r) {
+        return new ReservationResponse(
+                r.getId(), r.getGuestName(), r.getHotelName(), r.getCheckIn(), r.getCheckOut(), r.getStatus()
+        );
+    }
+}
+
+ 
+--- C:\code-repos\BookingMx-Testing\backend\src\main\java\com\bookingmx\reservations\controller\pom.xml --- 
+
+ 
+--- C:\code-repos\BookingMx-Testing\backend\src\main\java\com\bookingmx\reservations\dto\ReservationRequest.java --- 
+package com.bookingmx.reservations.dto;
+
+import jakarta.validation.constraints.Future;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import java.time.LocalDate;
+
+public class ReservationRequest {
+
+    @NotBlank(message = "Guest name cannot be blank")
+    private String guestName;
+
+    @NotBlank(message = "Hotel name cannot be blank")
+    private String hotelName;
+
+    @NotNull(message = "Check-in date is required")
+    @Future(message = "Check-in date must be in the future")
+    private LocalDate checkIn;
+
+    @NotNull(message = "Check-out date is required")
+    @Future(message = "Check-out date must be in the future")
+    private LocalDate checkOut;
+
+    public String getGuestName() { return guestName; }
+    public void setGuestName(String guestName) { this.guestName = guestName; }
+
+    public String getHotelName() { return hotelName; }
+    public void setHotelName(String hotelName) { this.hotelName = hotelName; }
+
+    public LocalDate getCheckIn() { return checkIn; }
+    public void setCheckIn(LocalDate checkIn) { this.checkIn = checkIn; }
+
+    public LocalDate getCheckOut() { return checkOut; }
+    public void setCheckOut(LocalDate checkOut) { this.checkOut = checkOut; }
+}
+
+ 
+--- C:\code-repos\BookingMx-Testing\backend\src\main\java\com\bookingmx\reservations\dto\ReservationResponse.java --- 
+package com.bookingmx.reservations.dto;
+
+import com.bookingmx.reservations.model.ReservationStatus;
+import java.time.LocalDate;
+
+public class ReservationResponse {
+    private Long id;
+    private String guestName;
+    private String hotelName;
+    private LocalDate checkIn;
+    private LocalDate checkOut;
+    private ReservationStatus status;
+
+    public ReservationResponse(Long id, String guestName, String hotelName, LocalDate checkIn, LocalDate checkOut, ReservationStatus status) {
+        this.id = id; this.guestName = guestName; this.hotelName = hotelName;
+        this.checkIn = checkIn; this.checkOut = checkOut; this.status = status;
+    }
+
+    public Long getId() { return id; }
+    public String getGuestName() { return guestName; }
+    public String getHotelName() { return hotelName; }
+    public LocalDate getCheckIn() { return checkIn; }
+    public LocalDate getCheckOut() { return checkOut; }
+    public ReservationStatus getStatus() { return status; }
+}
+
+ 
+--- C:\code-repos\BookingMx-Testing\backend\src\main\java\com\bookingmx\reservations\dto\pom.xml --- 
+
+ 
+--- C:\code-repos\BookingMx-Testing\backend\src\main\java\com\bookingmx\reservations\exception\ApiExceptionHandler.java --- 
+package com.bookingmx.reservations.exception;
+
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.validation.FieldError;
+import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.annotation.*;
+import java.time.Instant;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.stream.Collectors;
+
+@RestControllerAdvice
+public class ApiExceptionHandler {
+
+    @ExceptionHandler(BadRequestException.class)
+    public ResponseEntity<?> badRequest(BadRequestException ex) {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(errorBody(ex.getMessage(), 400));
+    }
+
+    @ExceptionHandler(NotFoundException.class)
+    public ResponseEntity<?> notFound(NotFoundException ex) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(errorBody(ex.getMessage(), 404));
+    }
+
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity<?> validationError(MethodArgumentNotValidException ex) {
+        var errors = ex.getBindingResult().getFieldErrors().stream()
+                .collect(Collectors.toMap(
+                        FieldError::getField,
+                        field -> field.getDefaultMessage(),
+                        (a, b) -> a // merge strategy
+                ));
+
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(Map.of(
+                        "timestamp", Instant.now().toString(),
+                        "status", 400,
+                        "message", "Validation failed",
+                        "errors", errors
+                ));
+    }
+
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<Map<String, Object>> handleGenericException(Exception e) {
+        Map<String, Object> error = new HashMap<>();
+        error.put("message", e.getMessage() != null ? e.getMessage() : "Unexpected error");
+        error.put("type", e.getClass().getSimpleName());
+        error.put("status", 500);
+        error.put("timestamp", java.time.Instant.now());
+
+        // Print full stack trace for debugging
+        System.err.println("=== UNHANDLED EXCEPTION ===");
+        e.printStackTrace();
+        System.err.println("=========================");
+
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
+    }
+
+    private Map<String, Object> errorBody(String message, int status) {
+        return Map.of(
+                "timestamp", Instant.now().toString(),
+                "status", status,
+                "message", message
+        );
+    }
+}
+
+ 
+--- C:\code-repos\BookingMx-Testing\backend\src\main\java\com\bookingmx\reservations\exception\BadRequestException.java --- 
+package com.bookingmx.reservations.exception;
+
+import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.ResponseStatus;
+
+@ResponseStatus(HttpStatus.BAD_REQUEST)
+public class BadRequestException extends RuntimeException {
+    public BadRequestException(String m) { super(m); }
+}
+
+ 
+--- C:\code-repos\BookingMx-Testing\backend\src\main\java\com\bookingmx\reservations\exception\NotFoundException.java --- 
+package com.bookingmx.reservations.exception;
+
+import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.ResponseStatus;
+
+@ResponseStatus(HttpStatus.NOT_FOUND)
+public class NotFoundException extends RuntimeException {
+    public NotFoundException(String m) { super(m); }
+}
+
+ 
+--- C:\code-repos\BookingMx-Testing\backend\src\main\java\com\bookingmx\reservations\exception\pom.xml --- 
+
+ 
+--- C:\code-repos\BookingMx-Testing\backend\src\main\java\com\bookingmx\reservations\model\Reservation.java --- 
+package com.bookingmx.reservations.model;
+
+import java.time.LocalDate;
+import java.util.Objects;
+
+public class Reservation {
+    private Long id;
+    private String guestName;
+    private String hotelName;
+    private LocalDate checkIn;
+    private LocalDate checkOut;
+    private ReservationStatus status = ReservationStatus.ACTIVE;
+
+    public Reservation(Long id, String guestName, String hotelName, LocalDate checkIn, LocalDate checkOut) {
+        this.id = id;
+        this.guestName = guestName;
+        this.hotelName = hotelName;
+        this.checkIn = checkIn;
+        this.checkOut = checkOut;
+    }
+
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
+    public String getGuestName() { return guestName; }
+    public void setGuestName(String guestName) { this.guestName = guestName; }
+    public String getHotelName() { return hotelName; }
+    public void setHotelName(String hotelName) { this.hotelName = hotelName; }
+    public LocalDate getCheckIn() { return checkIn; }
+    public void setCheckIn(LocalDate checkIn) { this.checkIn = checkIn; }
+    public LocalDate getCheckOut() { return checkOut; }
+    public void setCheckOut(LocalDate checkOut) { this.checkOut = checkOut; }
+    public ReservationStatus getStatus() { return status; }
+    public void setStatus(ReservationStatus status) { this.status = status; }
+
+    public boolean isActive() { return this.status == ReservationStatus.ACTIVE; }
+
+    @Override public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof Reservation that)) return false;
+        return Objects.equals(id, that.id);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(id);
+    }
+}
+
+ 
+--- C:\code-repos\BookingMx-Testing\backend\src\main\java\com\bookingmx\reservations\model\ReservationStatus.java --- 
+package com.bookingmx.reservations.model;
+
+public enum ReservationStatus {
+    ACTIVE, CANCELED
+}
+
+ 
+--- C:\code-repos\BookingMx-Testing\backend\src\main\java\com\bookingmx\reservations\model\pom.xml --- 
+
+ 
+--- C:\code-repos\BookingMx-Testing\backend\src\main\java\com\bookingmx\reservations\repo\ReservationRepository.java --- 
+package com.bookingmx.reservations.repo;
+
+import com.bookingmx.reservations.model.Reservation;
+import org.springframework.stereotype.Repository;
+
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicLong;
+
+@Repository
+public class ReservationRepository {
+    private final Map<Long, Reservation> store = new ConcurrentHashMap<>();
+    private final AtomicLong seq = new AtomicLong(1L);
+
+    public List<Reservation> findAll() {
+        return new ArrayList<>(store.values());
+    }
+
+    public Optional<Reservation> findById(Long id) {
+        return Optional.ofNullable(store.get(id));
+    }
+
+    public Reservation save(Reservation r) {
+        if (r.getId() == null) r.setId(seq.getAndIncrement());
+        store.put(r.getId(), r);
+        return r;
+    }
+
+    public void deleteAll() {
+        store.clear();
+        seq.set(1L);
+    }
+}
+
+ 
+--- C:\code-repos\BookingMx-Testing\backend\src\main\java\com\bookingmx\reservations\repo\pom.xml --- 
+
+ 
+--- C:\code-repos\BookingMx-Testing\backend\src\main\java\com\bookingmx\reservations\service\ReservationService.java --- 
+package com.bookingmx.reservations.service;
+
+import com.bookingmx.reservations.dto.ReservationRequest;
+import com.bookingmx.reservations.model.Reservation;
+import com.bookingmx.reservations.model.ReservationStatus;
+import com.bookingmx.reservations.repo.ReservationRepository;
+import com.bookingmx.reservations.exception.BadRequestException;
+import com.bookingmx.reservations.exception.NotFoundException;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import java.time.LocalDate;
+import java.util.List;
+import java.util.Optional;
+
+@Service
+public class ReservationService {
+    private final ReservationRepository repo;
+
+    public ReservationService(ReservationRepository repo) {
+        this.repo = repo;
+    }
+
+    public List<Reservation> list() {
+        return repo.findAll();
+    }
+
+    public Optional<Reservation> getById(Long id) {
+        return repo.findById(id);
+    }
+
+
+    public Reservation create(ReservationRequest req) {
+        validateDates(req.getCheckIn(), req.getCheckOut());
+        Reservation r = new Reservation(null, req.getGuestName(), req.getHotelName(), req.getCheckIn(), req.getCheckOut());
+        return repo.save(r);
+    }
+
+    public Reservation update(Long id, ReservationRequest req) {
+        Reservation existing = repo.findById(id).orElseThrow(() -> new NotFoundException("Reservation not found"));
+        if (!existing.isActive()) throw new BadRequestException("Cannot update a canceled reservation");
+        validateDates(req.getCheckIn(), req.getCheckOut());
+        existing.setGuestName(req.getGuestName());
+        existing.setHotelName(req.getHotelName());
+        existing.setCheckIn(req.getCheckIn());
+        existing.setCheckOut(req.getCheckOut());
+        return repo.save(existing);
+    }
+
+    public Reservation cancel(Long id) {
+        Reservation existing = repo.findById(id).orElseThrow(() -> new NotFoundException("Reservation not found"));
+        existing.setStatus(ReservationStatus.CANCELED);
+        return repo.save(existing);
+    }
+
+    private void validateDates(LocalDate in, LocalDate out) {
+        if (in == null || out == null) throw new BadRequestException("Dates cannot be null");
+        if (in.isBefore(LocalDate.now())) throw new BadRequestException("Check-in must be in the future");
+        if (out.isBefore(LocalDate.now())) throw new BadRequestException("Check-out must be in the future");
+        if (!out.isAfter(in)) throw new BadRequestException("Check-out must be after check-in");
+    }
+}
+
+ 
+--- C:\code-repos\BookingMx-Testing\backend\src\main\java\com\bookingmx\reservations\service\pom.xml --- 
+
+ 
+--- C:\code-repos\BookingMx-Testing\backend\src\main\resources\pom.xml --- 
+
+ 
+--- C:\code-repos\BookingMx-Testing\backend\src\test\pom.xml --- 
+
+ 
+--- C:\code-repos\BookingMx-Testing\backend\src\test\java\pom.xml --- 
+
+ 
+--- C:\code-repos\BookingMx-Testing\backend\src\test\java\com\pom.xml --- 
+
+ 
+--- C:\code-repos\BookingMx-Testing\backend\src\test\java\com\bookingmx\pom.xml --- 
+
+ 
+--- C:\code-repos\BookingMx-Testing\backend\src\test\java\com\bookingmx\reservations\CucumberTestRunner.java --- 
+package com.bookingmx.reservations;
+
+import org.junit.platform.suite.api.ConfigurationParameter;
+import org.junit.platform.suite.api.IncludeEngines;
+import org.junit.platform.suite.api.SelectClasspathResource;
+import org.junit.platform.suite.api.Suite;
+
+import static io.cucumber.junit.platform.engine.Constants.GLUE_PROPERTY_NAME;
+
+@Suite
+@IncludeEngines("cucumber")
+@SelectClasspathResource("features")
+@ConfigurationParameter(key = GLUE_PROPERTY_NAME, value = "com.bookingmx.reservations.steps")
+public class CucumberTestRunner {
+    // This class remains empty, it's just a runner
+}
+ 
+--- C:\code-repos\BookingMx-Testing\backend\src\test\java\com\bookingmx\reservations\pom.xml --- 
+
+ 
+--- C:\code-repos\BookingMx-Testing\backend\src\test\java\com\bookingmx\reservations\steps\CucumberTestContextConfiguration.java --- 
+package com.bookingmx.reservations.steps;
+
+import com.bookingmx.reservations.BookingMxApplication;
+import io.cucumber.spring.CucumberContextConfiguration;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.test.context.SpringBootTest;
+
+@CucumberContextConfiguration
+@SpringBootTest(classes = BookingMxApplication.class, webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@AutoConfigureMockMvc
+public class CucumberTestContextConfiguration {
+}
+
+ 
+--- C:\code-repos\BookingMx-Testing\backend\src\test\java\com\bookingmx\reservations\steps\ReservationApiSteps.java --- 
+package com.bookingmx.reservations.steps;
+
+import com.bookingmx.reservations.dto.ReservationRequest;
+import com.bookingmx.reservations.repo.ReservationRepository;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import io.cucumber.java.Before;
+import io.cucumber.java.en.*;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.http.MediaType;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.MvcResult;
+
+import java.time.LocalDate;
+import java.util.HashMap;
+import java.util.Map;
+
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+
+@SpringBootTest
+public class ReservationApiSteps extends CucumberTestContextConfiguration {
+
+    @Autowired
+    private MockMvc mockMvc;
+
+    @Autowired
+    private ObjectMapper objectMapper;
+
+    private ReservationRequest request;
+    private MvcResult mvcResult;
+
+    // Store created reservation IDs - maps scenario ID to actual database ID
+    private Map<Integer, Long> createdReservationIds = new HashMap<>();
+
+    @Autowired
+    private ReservationRepository repository;
+
+    @Before
+    public void setup() {
+        request = new ReservationRequest();
+        mvcResult = null;
+        createdReservationIds.clear();
+    }
+
+    // ==================== GIVEN ====================
+
+    @Given("the BookingMx API is running")
+    public void theApiIsRunning() throws Exception {
+        mockMvc.perform(get("/actuator/health"))
+                .andExpect(status().isOk());
+    }
+
+    @Given("I have a valid reservation request")
+    public void iHaveAValidReservationRequest() {
+        request.setGuestName("Juan");
+        request.setHotelName("Paradise Inn");
+        request.setCheckIn(LocalDate.now().plusDays(1));
+        request.setCheckOut(LocalDate.now().plusDays(3));
+    }
+
+    @Given("I have a reservation request with blank guest name")
+    public void iHaveAReservationRequestWithBlankGuestName() {
+        request.setGuestName("");
+        request.setHotelName("Paradise Inn");
+        request.setCheckIn(LocalDate.now().plusDays(1));
+        request.setCheckOut(LocalDate.now().plusDays(3));
+    }
+
+    @Given("I have a reservation request with blank hotel name")
+    public void iHaveAReservationRequestWithBlankHotelName() {
+        request.setGuestName("Juan");
+        request.setHotelName("");
+        request.setCheckIn(LocalDate.now().plusDays(1));
+        request.setCheckOut(LocalDate.now().plusDays(3));
+    }
+
+    @Given("I have a reservation request with check-out before check-in")
+    public void iHaveAReservationRequestWithInvalidDates() {
+        request.setGuestName("Juan");
+        request.setHotelName("Paradise Inn");
+        request.setCheckIn(LocalDate.now().plusDays(5));
+        request.setCheckOut(LocalDate.now().plusDays(3));
+    }
+
+    @Given("the repository is empty")
+    public void theRepositoryIsEmpty() {
+        repository.deleteAll();
+        createdReservationIds.clear();
+    }
+
+    @Given("an existing reservation with ID {int}")
+    public void anExistingReservationWithId(int expectedId) throws Exception {
+        ReservationRequest newRequest = new ReservationRequest();
+        newRequest.setGuestName("Juan");
+        newRequest.setHotelName("Default Hotel");
+        newRequest.setCheckIn(LocalDate.now().plusDays(1));
+        newRequest.setCheckOut(LocalDate.now().plusDays(2));
+
+        MvcResult result = mockMvc.perform(post("/api/reservations")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(newRequest)))
+                .andExpect(status().isCreated())
+                .andReturn();
+
+        String responseJson = result.getResponse().getContentAsString();
+        System.out.println("Created reservation response: " + responseJson);
+
+        // Extract the actual ID from response
+        Map<String, Object> response = objectMapper.readValue(responseJson, Map.class);
+        Long actualId = ((Number) response.get("id")).longValue();
+
+        // Store the mapping between expected (scenario) ID and actual (database) ID
+        createdReservationIds.put(expectedId, actualId);
+
+        System.out.println("Mapped scenario ID " + expectedId + " to database ID " + actualId);
+    }
+
+    @Given("I have a valid update request with new hotel name {string}")
+    public void iHaveAValidUpdateRequestWithNewHotelName(String hotelName) {
+        request.setGuestName("Juan");
+        request.setHotelName(hotelName);
+        request.setCheckIn(LocalDate.now().plusDays(1));
+        request.setCheckOut(LocalDate.now().plusDays(2));
+    }
+
+    @Given("I have an update request with check-out before check-in")
+    public void iHaveAnUpdateRequestWithInvalidDates() {
+        request.setGuestName("Juan");
+        request.setHotelName("Paradise Inn");
+        request.setCheckIn(LocalDate.now().plusDays(3));
+        request.setCheckOut(LocalDate.now().plusDays(1));
+    }
+
+    // ==================== WHEN ====================
+
+    @When("I POST the request to {string}")
+    public void iPOSTTheRequestTo(String endpoint) throws Exception {
+        mvcResult = mockMvc.perform(post(endpoint)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andReturn();
+    }
+
+    @When("I GET {string}")
+    public void iGET(String endpoint) throws Exception {
+        // Replace scenario ID in endpoint with actual database ID
+        String actualEndpoint = replaceIdInEndpoint(endpoint);
+
+        try {
+            mvcResult = mockMvc.perform(get(actualEndpoint))
+                    .andReturn();
+
+            System.out.println("GET " + actualEndpoint + " - Status: " + mvcResult.getResponse().getStatus());
+            System.out.println("Response body: " + mvcResult.getResponse().getContentAsString());
+            if (mvcResult.getResponse().getStatus() >= 400) {
+                System.out.println("Error message: " + mvcResult.getResponse().getErrorMessage());
+            }
+        } catch (Exception e) {
+            System.err.println("Exception during GET " + actualEndpoint + ": " + e.getMessage());
+            e.printStackTrace();
+            throw e;
+        }
+    }
+
+    @When("I PUT the request to {string}")
+    public void iPUTTheRequestTo(String endpoint) throws Exception {
+        String actualEndpoint = replaceIdInEndpoint(endpoint);
+
+        mvcResult = mockMvc.perform(put(actualEndpoint)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andReturn();
+    }
+
+    @When("I DELETE {string}")
+    public void iDELETE(String endpoint) throws Exception {
+        String actualEndpoint = replaceIdInEndpoint(endpoint);
+
+        mvcResult = mockMvc.perform(delete(actualEndpoint))
+                .andReturn();
+    }
+
+    // ==================== THEN ====================
+
+    @Then("the response status should be {int}")
+    public void theResponseStatusShouldBe(int expectedStatus) throws Exception {
+        assertThat(mvcResult.getResponse().getStatus(), is(expectedStatus));
+    }
+
+    @Then("the response should contain a reservation ID")
+    public void theResponseShouldContainAReservationID() throws Exception {
+        String json = mvcResult.getResponse().getContentAsString();
+        assertThat(json, containsString("id"));
+    }
+
+    @Then("the response JSON should include guest name {string}")
+    public void theResponseJSONShouldIncludeGuestName(String name) throws Exception {
+        String json = mvcResult.getResponse().getContentAsString();
+        assertThat(json, containsString("\"guestName\":\"" + name + "\""));
+    }
+
+    @Then("the response JSON should include hotel name {string}")
+    public void theResponseJSONShouldIncludeHotelName(String hotel) throws Exception {
+        String json = mvcResult.getResponse().getContentAsString();
+        assertThat(json, containsString("\"hotelName\":\"" + hotel + "\""));
+    }
+
+    @Then("the response JSON should contain {string}")
+    public void theResponseJSONShouldContain(String expectedText) throws Exception {
+        String json = mvcResult.getResponse().getContentAsString();
+        assertThat(json, containsString(expectedText));
+    }
+
+    @Then("the response JSON should be a list")
+    public void theResponseJSONShouldBeAList() throws Exception {
+        String json = mvcResult.getResponse().getContentAsString();
+        assertThat(json.trim(), startsWith("["));
+    }
+
+    @Then("the response JSON should be an empty list")
+    public void theResponseJSONShouldBeAnEmptyList() throws Exception {
+        String json = mvcResult.getResponse().getContentAsString();
+        assertThat(json.trim(), equalTo("[]"));
+    }
+
+    // ==================== HELPER METHODS ====================
+
+    /**
+     * Replaces scenario IDs in endpoint paths with actual database IDs.
+     * For example, "/api/reservations/3" becomes "/api/reservations/1"
+     * if scenario ID 3 maps to database ID 1.
+     */
+    private String replaceIdInEndpoint(String endpoint) {
+        for (Map.Entry<Integer, Long> entry : createdReservationIds.entrySet()) {
+            String scenarioIdStr = "/" + entry.getKey();
+            String databaseIdStr = "/" + entry.getValue();
+            if (endpoint.contains(scenarioIdStr)) {
+                String replaced = endpoint.replace(scenarioIdStr, databaseIdStr);
+                System.out.println("Replaced endpoint: " + endpoint + " -> " + replaced);
+                return replaced;
+            }
+        }
+        return endpoint;
+    }
+}
+ 
+--- C:\code-repos\BookingMx-Testing\backend\src\test\java\com\bookingmx\reservations\steps\ReservationSteps.java --- 
+package com.bookingmx.reservations.steps;
+
+import com.bookingmx.reservations.dto.ReservationRequest;
+import com.bookingmx.reservations.dto.ReservationResponse;
+import com.bookingmx.reservations.model.Reservation;
+import com.bookingmx.reservations.service.ReservationService;
+import io.cucumber.java.Before;
+import io.cucumber.java.en.And;
+import io.cucumber.java.en.Given;
+import io.cucumber.java.en.Then;
+import io.cucumber.java.en.When;
+import org.springframework.beans.factory.annotation.Autowired;
+import java.time.LocalDate;
+
+import static org.junit.jupiter.api.Assertions.*;
+
+public class ReservationSteps extends CucumberTestContextConfiguration {
+    @Autowired
+    private ReservationService reservationService;
+    // Shared state for the scenario
+    private ReservationRequest request;
+    private ReservationResponse response;
+    private Exception thrownException;
+
+    private Long reservationId;
+    private ReservationResponse retrievedResponse;
+
+    @Before
+    public void setup() {
+        request = new ReservationRequest();
+        response = null;
+        thrownException = null;
+    }
+
+    // ==================== GIVEN Steps ====================
+
+    @Given("the BookingMx application is running")
+    public void theApplicationIsRunning() {
+        assertNotNull(reservationService, "Reservation service should be available");
+    }
+
+    @Given("the reservation repository is empty")
+    public void theRepositoryIsEmpty() {
+        // In-memory repository auto-clears between tests
+    }
+
+    @Given("I am a guest named {string}")
+    public void iAmAGuestNamed(String guestName) {
+        request.setGuestName(guestName);
+    }
+
+    @Given("I want to book {string}")
+    public void iWantToBook(String hotelName) {
+        request.setHotelName(hotelName);
+    }
+
+    @Given("my check-in date is {int} days from now")
+    public void myCheckInDateIsDaysFromNow(int days) {
+        request.setCheckIn(LocalDate.now().plusDays(days));
+    }
+
+    @Given("my check-out date is {int} days from now")
+    public void myCheckOutDateIsDaysFromNow(int days) {
+        request.setCheckOut(LocalDate.now().plusDays(days));
+    }
+
+    @Given("my check-in date is null")
+    public void myCheckInDateIsNull() {
+        request.setCheckIn(null);
+    }
+
+    @Given("my check-out date is null")
+    public void myCheckOutDateIsNull() {
+        request.setCheckOut(null);
+    }
+
+    @Given("my check-in date is {int} days ago")
+    public void myCheckInDateIsDaysAgo(int days) {
+        request.setCheckIn(LocalDate.now().minusDays(days));
+    }
+
+    @Given("my check-out date is yesterday")
+    public void myCheckOutDateIsYesterday() {
+        request.setCheckOut(LocalDate.now().minusDays(1));
+    }
+
+    @Given("my guest name is blank")
+    public void myGuestNameIsBlank() {
+        request.setGuestName("");
+    }
+
+    @Given("my hotel name is blank")
+    public void myHotelNameIsBlank() {
+        request.setHotelName("");
+    }
+
+    @Given("my check-in date is tomorrow")
+    public void myCheckInDateIsTomorrow() {
+        request.setCheckIn(LocalDate.now().plusDays(1));
+    }
+
+    @Given("I prepare a reservation update for a non-existing ID")
+    public void iPrepareAReservationUpdateForNonExistingId() {
+        reservationId = 999L;
+        request.setGuestName("Ghost");
+        request.setHotelName("Nowhere");
+        request.setCheckIn(LocalDate.now().plusDays(2));
+        request.setCheckOut(LocalDate.now().plusDays(3));
+    }
+
+    @Given("I have a non-existing reservation ID")
+    public void iHaveANonExistingReservationID() {
+        reservationId = 12345L;
+    }
+
+    // ==================== WHEN Steps ====================
+
+    @When("I create a reservation")
+    public void iCreateAReservation() {
+        try {
+            Reservation created = reservationService.create(request);
+            response = toResponse(created);
+        } catch (Exception e) {
+            thrownException = e;
+        }
+    }
+
+    @When("I attempt to create a reservation")
+    public void iAttemptToCreateAReservation() {
+        try {
+            Reservation created = reservationService.create(request);
+            response = toResponse(created);
+        } catch (Exception e) {
+            thrownException = e;
+        }
+    }
+
+    @When("I attempt to create the reservation")
+    public void iAttemptToCreateTheReservation() {
+        iAttemptToCreateAReservation();
+    }
+
+    @When("I list all reservations")
+    public void iListAllReservations() {
+        var list = reservationService.list();
+        assertNotNull(list, "List should not be null");
+        assertFalse(list.isEmpty(), "List should not be empty");
+    }
+
+    @When("I get the reservation by ID")
+    public void iGetTheReservationById() {
+        assertNotNull(response, "Must have created a reservation first");
+        reservationId = response.getId();
+        retrievedResponse = toResponse(
+                reservationService.list().stream()
+                        .filter(r -> r.getId().equals(reservationId))
+                        .findFirst()
+                        .orElse(null)
+        );
+    }
+
+    @When("I attempt to update the reservation")
+    public void iAttemptToUpdateTheReservation() {
+        try {
+            reservationService.update(reservationId, request);
+        } catch (Exception e) {
+            thrownException = e;
+        }
+    }
+
+    @When("I attempt to cancel the reservation")
+    public void iAttemptToCancelTheReservation() {
+        try {
+            reservationService.cancel(reservationId);
+        } catch (Exception e) {
+            thrownException = e;
+        }
+    }
+
+    // ==================== THEN Steps ====================
+
+    @Then("the reservation should be created successfully")
+    public void theReservationShouldBeCreatedSuccessfully() {
+        assertNotNull(response, "Response should not be null");
+        assertNull(thrownException, "No exception should be thrown");
+    }
+
+    @Then("the creation should fail")
+    public void theCreationShouldFail() {
+        assertNotNull(thrownException, "An exception should have been thrown");
+        assertNull(response, "Response should be null when creation fails");
+    }
+
+    @Then("I should receive an error message {string}")
+    public void iShouldReceiveAnErrorMessage(String expectedMessage) {
+        assertNotNull(thrownException, "An exception should have been thrown");
+        String actualMessage = thrownException.getMessage();
+        assertTrue(actualMessage.contains(expectedMessage),
+                String.format("Expected error message to contain: '%s', but got: '%s'",
+                        expectedMessage, actualMessage));
+    }
+
+    @Then("no reservation should be stored")
+    public void noReservationShouldBeStored() {
+        assertNull(response, "Response should be null when creation fails");
+    }
+
+    @Then("the reservation status should be {string}")
+    public void theReservationStatusShouldBe(String expectedStatus) {
+        assertNotNull(response, "Response should not be null");
+        assertEquals(expectedStatus, response.getStatus().toString(),
+                "Reservation status should match expected value");
+    }
+
+    @Then("the reservation should have a unique ID")
+    public void theReservationShouldHaveAUniqueId() {
+        assertNotNull(response, "Response should not be null");
+        assertNotNull(response.getId(), "Reservation ID should not be null");
+        assertTrue(response.getId() > 0, "Reservation ID should be positive");
+    }
+
+    @Then("the creation should fail with validation error")
+    public void theCreationShouldFailWithValidationError() {
+        assertNotNull(thrownException, "An exception should have been thrown");
+    }
+
+    @Then("I should receive an error about blank guest name")
+    public void iShouldReceiveAnErrorAboutBlankGuestName() {
+        assertNotNull(thrownException, "An exception should have been thrown");
+    }
+
+    @Then("I should receive an error about blank hotel name")
+    public void iShouldReceiveAnErrorAboutBlankHotelName() {
+        assertNotNull(thrownException, "An exception should have been thrown");
+    }
+
+    @Then("the creation should be successful")
+    public void theCreationShouldBeSuccessful() {
+        theReservationShouldBeCreatedSuccessfully();
+    }
+
+    @Then("the stay duration should be {int} nights")
+    public void theStayDurationShouldBeNights(int expectedNights) {
+        assertNotNull(response, "Response should not be null");
+        long actualNights = java.time.temporal.ChronoUnit.DAYS.between(
+                response.getCheckIn(),
+                response.getCheckOut()
+        );
+        assertEquals(expectedNights, actualNights,
+                "Stay duration should match expected nights");
+    }
+
+    @Then("I should see at least one reservation")
+    public void iShouldSeeAtLeastOneReservation() {
+        assertFalse(reservationService.list().isEmpty(), "There should be at least one reservation");
+    }
+
+    @Then("the retrieved reservation should match the created one")
+    public void theRetrievedReservationShouldMatchTheCreatedOne() {
+        assertNotNull(retrievedResponse, "Retrieved reservation should not be null");
+        assertEquals(response.getId(), retrievedResponse.getId(), "IDs should match");
+        assertEquals(response.getGuestName(), retrievedResponse.getGuestName(), "Guest names should match");
+        assertEquals(response.getHotelName(), retrievedResponse.getHotelName(), "Hotel names should match");
+    }
+
+    @Then("the update should be successful")
+    public void theUpdateShouldBeSuccessful() {
+        assertNull(thrownException, "No exception should be thrown");
+    }
+
+    @Then("the update should fail with {string}")
+    public void theUpdateShouldFailWith(String expectedMessage) {
+        assertNotNull(thrownException, "An exception should have been thrown");
+        assertTrue(thrownException.getMessage().contains(expectedMessage),
+                "Expected message to contain: " + expectedMessage);
+    }
+
+    @Then("the cancellation should fail with {string}")
+    public void theCancellationShouldFailWith(String expectedMessage) {
+        assertNotNull(thrownException, "An exception should have been thrown");
+        assertTrue(thrownException.getMessage().contains(expectedMessage),
+                "Expected message to contain: " + expectedMessage);
+    }
+
+    // ==================== AND Steps ====================
+
+    @And("the reservation should be stored in the system")
+    public void theReservationShouldBeStoredInTheSystem() {
+        assertNotNull(response, "Response should not be null");
+        assertNotNull(response.getId(), "Reservation should have been assigned an ID");
+
+        // Verify it's actually in the system by checking the list
+        assertDoesNotThrow(() -> {
+            reservationService.list();
+        }, "Should be able to retrieve reservations from the system");
+    }
+
+    @And("the guest name should be {string}")
+    public void theGuestNameShouldBe(String expectedName) {
+        assertNotNull(response, "Response should not be null");
+        assertEquals(expectedName, response.getGuestName(),
+                "Guest name should match expected value");
+    }
+
+    @And("the hotel name should be {string}")
+    public void theHotelNameShouldBe(String expectedHotel) {
+        assertNotNull(response, "Response should not be null");
+        assertEquals(expectedHotel, response.getHotelName(),
+                "Hotel name should match expected value");
+    }
+
+    @And("the check-in date should be {int} days from now")
+    public void theCheckInDateShouldBeDaysFromNow(int days) {
+        assertNotNull(response, "Response should not be null");
+        LocalDate expectedDate = LocalDate.now().plusDays(days);
+        assertEquals(expectedDate, response.getCheckIn(),
+                "Check-in date should match expected value");
+    }
+
+    @And("the check-out date should be {int} days from now")
+    public void theCheckOutDateShouldBeDaysFromNow(int days) {
+        assertNotNull(response, "Response should not be null");
+        LocalDate expectedDate = LocalDate.now().plusDays(days);
+        assertEquals(expectedDate, response.getCheckOut(),
+                "Check-out date should match expected value");
+    }
+
+    @And("I update the reservation hotel to {string}")
+    public void iUpdateTheReservationHotelTo(String newHotel) {
+        assertNotNull(response, "Must have created a reservation first");
+        try {
+            ReservationRequest updateReq = new ReservationRequest();
+            updateReq.setGuestName(response.getGuestName());
+            updateReq.setHotelName(newHotel);
+            updateReq.setCheckIn(response.getCheckIn());
+            updateReq.setCheckOut(response.getCheckOut());
+            Reservation updated = reservationService.update(response.getId(), updateReq);
+            response = toResponse(updated);
+        } catch (Exception e) {
+            thrownException = e;
+        }
+    }
+
+    @And("I cancel the reservation")
+    public void iCancelTheReservation() {
+        assertNotNull(response, "Must have created a reservation first");
+        try {
+            Reservation canceled = reservationService.cancel(response.getId());
+            response = toResponse(canceled);
+        } catch (Exception e) {
+            thrownException = e;
+        }
+    }
+
+    // ==================== Helper Methods ====================
+
+    /**
+     * Converts a Reservation entity to a ReservationResponse DTO
+     */
+    private ReservationResponse toResponse(Reservation reservation) {
+        if (reservation == null) {
+            return null;
+        }
+        return new ReservationResponse(
+                reservation.getId(),
+                reservation.getGuestName(),
+                reservation.getHotelName(),
+                reservation.getCheckIn(),
+                reservation.getCheckOut(),
+                reservation.getStatus()
+        );
+    }
+}
+
+ 
+--- C:\code-repos\BookingMx-Testing\backend\src\test\java\com\bookingmx\reservations\steps\ReservationTest.java --- 
+package com.bookingmx.reservations.model;
+
+import org.junit.jupiter.api.Test;
+import java.time.LocalDate;
+
+import static org.junit.jupiter.api.Assertions.*;
+
+class ReservationTest {
+
+    @Test
+    void testEquals_sameInstance() {
+        // Given
+        Reservation reservation = new Reservation(1L, "Juan", "Hotel A",
+                LocalDate.now(), LocalDate.now().plusDays(1));
+
+        // When & Then - same object should equal itself (hits: if (this == o) return true)
+        assertTrue(reservation.equals(reservation));
+    }
+
+    @Test
+    void testEquals_equalReservations() {
+        // Given
+        Reservation r1 = new Reservation(1L, "Juan", "Hotel A",
+                LocalDate.now(), LocalDate.now().plusDays(1));
+        Reservation r2 = new Reservation(1L, "Maria", "Hotel B",
+                LocalDate.now(), LocalDate.now().plusDays(2));
+
+        // When & Then - reservations with same ID should be equal (Objects.equals returns true)
+        assertTrue(r1.equals(r2));
+        assertEquals(r1, r2);
+    }
+
+    @Test
+    void testEquals_differentIds() {
+        // Given
+        Reservation r1 = new Reservation(1L, "Juan", "Hotel A",
+                LocalDate.now(), LocalDate.now().plusDays(1));
+        Reservation r2 = new Reservation(2L, "Juan", "Hotel A",
+                LocalDate.now(), LocalDate.now().plusDays(1));
+
+        // When & Then - reservations with different IDs should not be equal (Objects.equals returns false)
+        assertFalse(r1.equals(r2));
+        assertNotEquals(r1, r2);
+    }
+
+    @Test
+    void testEquals_nullId() {
+        // Given
+        Reservation r1 = new Reservation(null, "Juan", "Hotel A",
+                LocalDate.now(), LocalDate.now().plusDays(1));
+        Reservation r2 = new Reservation(null, "Juan", "Hotel A",
+                LocalDate.now(), LocalDate.now().plusDays(1));
+
+        // When & Then - reservations with both null IDs should be equal
+        assertTrue(r1.equals(r2));
+        assertEquals(r1, r2);
+    }
+
+    @Test
+    void testEquals_oneNullId() {
+        // Given
+        Reservation r1 = new Reservation(1L, "Juan", "Hotel A",
+                LocalDate.now(), LocalDate.now().plusDays(1));
+        Reservation r2 = new Reservation(null, "Juan", "Hotel A",
+                LocalDate.now(), LocalDate.now().plusDays(1));
+
+        // When & Then - one null, one non-null ID should not be equal
+        assertFalse(r1.equals(r2));
+        assertNotEquals(r1, r2);
+    }
+
+    @Test
+    void testEquals_withNull() {
+        // Given
+        Reservation reservation = new Reservation(1L, "Juan", "Hotel A",
+                LocalDate.now(), LocalDate.now().plusDays(1));
+
+        // When & Then - comparing with null (hits instanceof check)
+        assertFalse(reservation.equals(null));
+        assertNotEquals(reservation, null);
+    }
+
+    @Test
+    void testEquals_withDifferentClass() {
+        // Given
+        Reservation reservation = new Reservation(1L, "Juan", "Hotel A",
+                LocalDate.now(), LocalDate.now().plusDays(1));
+        String notAReservation = "Not a reservation";
+
+        // When & Then - comparing with different type (hits instanceof check)
+        assertFalse(reservation.equals(notAReservation));
+        assertNotEquals(reservation, notAReservation);
+    }
+
+    @Test
+    void testHashCode_sameId() {
+        // Given
+        Reservation r1 = new Reservation(1L, "Juan", "Hotel A",
+                LocalDate.now(), LocalDate.now().plusDays(1));
+        Reservation r2 = new Reservation(1L, "Maria", "Hotel B",
+                LocalDate.now(), LocalDate.now().plusDays(2));
+
+        // When & Then - equal objects must have same hash code
+        assertEquals(r1.hashCode(), r2.hashCode());
+    }
+
+    @Test
+    void testHashCode_differentIds() {
+        // Given
+        Reservation r1 = new Reservation(1L, "Juan", "Hotel A",
+                LocalDate.now(), LocalDate.now().plusDays(1));
+        Reservation r2 = new Reservation(2L, "Juan", "Hotel A",
+                LocalDate.now(), LocalDate.now().plusDays(1));
+
+        // When & Then - different IDs should likely have different hash codes
+        assertNotEquals(r1.hashCode(), r2.hashCode());
+    }
+
+    @Test
+    void testIsActive_whenActive() {
+        // Given
+        Reservation reservation = new Reservation(1L, "Juan", "Hotel A",
+                LocalDate.now(), LocalDate.now().plusDays(1));
+
+        // When & Then
+        assertTrue(reservation.isActive());
+        assertEquals(ReservationStatus.ACTIVE, reservation.getStatus());
+    }
+
+    @Test
+    void testIsActive_whenCanceled() {
+        // Given
+        Reservation reservation = new Reservation(1L, "Juan", "Hotel A",
+                LocalDate.now(), LocalDate.now().plusDays(1));
+        reservation.setStatus(ReservationStatus.CANCELED);
+
+        // When & Then
+        assertFalse(reservation.isActive());
+        assertEquals(ReservationStatus.CANCELED, reservation.getStatus());
+    }
+
+    @Test
+    void testSettersAndGetters() {
+        // Given
+        Reservation reservation = new Reservation(1L, "Juan", "Hotel A",
+                LocalDate.of(2025, 11, 1), LocalDate.of(2025, 11, 5));
+
+        // When
+        reservation.setId(2L);
+        reservation.setGuestName("Maria");
+        reservation.setHotelName("Hotel B");
+        reservation.setCheckIn(LocalDate.of(2025, 12, 1));
+        reservation.setCheckOut(LocalDate.of(2025, 12, 5));
+        reservation.setStatus(ReservationStatus.CANCELED);
+
+        // Then
+        assertEquals(2L, reservation.getId());
+        assertEquals("Maria", reservation.getGuestName());
+        assertEquals("Hotel B", reservation.getHotelName());
+        assertEquals(LocalDate.of(2025, 12, 1), reservation.getCheckIn());
+        assertEquals(LocalDate.of(2025, 12, 5), reservation.getCheckOut());
+        assertEquals(ReservationStatus.CANCELED, reservation.getStatus());
+    }
+}
+ 
+--- C:\code-repos\BookingMx-Testing\backend\src\test\java\com\bookingmx\reservations\steps\pom.xml --- 
+
+ 
+--- C:\code-repos\BookingMx-Testing\backend\src\test\resources\pom.xml --- 
+
+ 
+--- C:\code-repos\BookingMx-Testing\backend\src\test\resources\features\pom.xml --- 
+
+ 
+--- C:\code-repos\BookingMx-Testing\frontend\app.js --- 
+import { sampleData, validateGraphData, buildGraph, getNearbyCities } from "./js/graph.js";
+import { listReservations, createReservation, cancelReservation } from "./js/api.js";
+
+// Graph UI
+const form = document.getElementById("graph-form");
+const destinationEl = document.getElementById("destination");
+const maxDistanceEl = document.getElementById("maxDistance");
+const nearbyList = document.getElementById("nearby-list");
+
+const validation = validateGraphData(sampleData);
+const graph = validation.ok ? buildGraph(sampleData.cities, sampleData.edges) : null;
+
+form.addEventListener("submit", (e) => {
+  e.preventDefault();
+  if (!graph) return;
+  const dest = destinationEl.value.trim();
+  const maxD = Number(maxDistanceEl.value);
+  const results = getNearbyCities(graph, dest, maxD);
+  nearbyList.innerHTML = "";
+  if (results.length === 0) {
+    nearbyList.innerHTML = `<li>No nearby cities found. Check destination or adjust distance.</li>`;
+    return;
+  }
+  for (const r of results) {
+    const li = document.createElement("li");
+    li.textContent = `${r.city} — ${r.distance} km`;
+    nearbyList.appendChild(li);
+  }
+});
+
+// Reservations UI
+const resForm = document.getElementById("reservation-form");
+const refreshBtn = document.getElementById("refresh");
+const listEl = document.getElementById("reservation-list");
+
+async function refreshReservations() {
+  listEl.innerHTML = "<li>Loading...</li>";
+  try {
+    const items = await listReservations();
+    listEl.innerHTML = "";
+    for (const r of items) {
+      const li = document.createElement("li");
+      li.innerHTML = `
+        <strong>#${r.id}</strong> ${r.guestName} @ ${r.hotelName}
+        (${r.checkIn} → ${r.checkOut}) [${r.status}]
+        <button data-id=\"${r.id}\" class=\"cancel\">Cancel</button>
+      `;
+      listEl.appendChild(li);
+    }
+  } catch (e) {
+    listEl.innerHTML = `<li>Error: ${e.message}</li>`;
+  }
+}
+
+resForm.addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const payload = {
+    guestName: document.getElementById("guestName").value.trim(),
+    hotelName: document.getElementById("hotelName").value.trim(),
+    checkIn: document.getElementById("checkIn").value,
+    checkOut: document.getElementById("checkOut").value
+  };
+  try {
+    await createReservation(payload);
+    await refreshReservations();
+    resForm.reset();
+  } catch (err) {
+    alert(err.message);
+  }
+});
+
+listEl.addEventListener("click", async (e) => {
+  const btn = e.target.closest(".cancel");
+  if (!btn) return;
+  const id = btn.getAttribute("data-id");
+  try {
+    await cancelReservation(id);
+    await refreshReservations();
+  } catch (err) {
+    alert(err.message);
+  }
+});
+
+refreshBtn.addEventListener("click", refreshReservations);
+refreshReservations();
+
+ 
+--- C:\code-repos\BookingMx-Testing\frontend\jest.config.js --- 
+export default {
+  testEnvironment: "node",
+  collectCoverage: true,
+  collectCoverageFrom: ["js/**/*.js"],
+  coverageReporters: ["text", "lcov"],
+  transform: {}
+};
+ 
+--- C:\code-repos\BookingMx-Testing\frontend\package.json --- 
+{
+  "name": "bookingmx-frontend",
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "serve": "npx http-server -c-1 -p 5173 .",
+    "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js --coverage"
+  },
+  "devDependencies": {
+    "http-server": "^14.1.1",
+    "jest": "30.2.0"
+  }
+}
+ 
+--- C:\code-repos\BookingMx-Testing\frontend\pom.xml --- 
+
+ 
+--- C:\code-repos\BookingMx-Testing\frontend\.dist\pom.xml --- 
+
+ 
+--- C:\code-repos\BookingMx-Testing\frontend\docs\TESTING_NOTES.md --- 
+# Technical Notes
+
+This document reflects the main technical difficulties encountered during development and testing, as well as the strategies used to overcome them.  
+It aims to promote self-reflection, documentation of technical learning, and continuous improvement.
+
+---
+
+## 1. Handling ES Modules in Jest
+
+### Difficulty
+When running Jest tests, the following error appeared:
+
+```bash
+SyntaxError: Unexpected token 'export'
+```
+
+This happened because the project used **ES modules** (`"type": "module"`) while Jest expected **CommonJS** syntax by default.
+
+### Strategy
+Configured Jest to support ES modules by:
+- Using `"type": "module"` in `package.json`.
+- Running tests with:
+  ```bash
+  node --experimental-vm-modules node_modules/jest/bin/jest.js
+  ```
+- Configuring `jest.config.js` with empty `transform: {}`
+
+## 2. Mocking the fetch API in Node Environment
+### Difficulty
+
+The tests for api.js failed with:
+
+```bash 
+TypeError: fetch.mockResolvedValueOnce is not a function
+```
+
+Because `fetch` is not available in Node.js by default ad jest does not mock it automatically.
+
+### Strategy
+- Created a mock for fetch globally:
+```js
+beforeAll(() => {
+  global.fetch = jest.fn();
+});
+```
+ 
+--- C:\code-repos\BookingMx-Testing\frontend\docs\pom.xml --- 
+
+ 
+--- C:\code-repos\BookingMx-Testing\frontend\js\api.js --- 
+// Minimal API client for the backend reservations module.
+// Kept simple & modular so you can mock/fake it in Jest tests.
+
+const BASE_URL = "http://localhost:8080/api/reservations";
+
+export async function listReservations() {
+  const res = await fetch(BASE_URL);
+  if (!res.ok) throw new Error("Failed to fetch reservations");
+  return res.json();
+}
+
+export async function createReservation(payload) {
+  const res = await fetch(BASE_URL, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload)
+  });
+  if (!res.ok) throw new Error((await res.json()).message || "Create failed");
+  return res.json();
+}
+
+export async function updateReservation(id, payload) {
+  const res = await fetch(`${BASE_URL}/${encodeURIComponent(id)}`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload)
+  });
+  if (!res.ok) throw new Error((await res.json()).message || "Update failed");
+  return res.json();
+}
+
+export async function cancelReservation(id) {
+  const res = await fetch(`${BASE_URL}/${encodeURIComponent(id)}`, { method: "DELETE" });
+  if (!res.ok) throw new Error((await res.json()).message || "Cancel failed");
+  return res.json();
+}
+
+ 
+--- C:\code-repos\BookingMx-Testing\frontend\js\graph.js --- 
+// Graph data structures and algorithms for nearby cities.
+// Keep functions pure for easy Jest unit testing.
+
+export class Graph {
+  constructor() {
+    this.adj = new Map(); // city -> Array<{to, distance}>
+  }
+
+  addCity(name) {
+    if (!name || typeof name !== "string") throw new Error("Invalid city name");
+    if (!this.adj.has(name)) this.adj.set(name, []);
+  }
+
+  addEdge(from, to, distanceKm) {
+    if (!this.adj.has(from) || !this.adj.has(to)) throw new Error("Unknown city");
+    if (!Number.isFinite(distanceKm) || distanceKm < 0) throw new Error("Invalid distance");
+    this.adj.get(from).push({ to, distance: distanceKm });
+    this.adj.get(to).push({ to: from, distance: distanceKm }); // undirected
+  }
+
+  neighbors(city) {
+    if (!this.adj.has(city)) throw new Error("Unknown city");
+    return [...this.adj.get(city)];
+  }
+}
+
+// Validates input dataset (array of cities, array of edges)
+export function validateGraphData({ cities, edges }) {
+  if (!Array.isArray(cities) || !Array.isArray(edges)) return { ok: false, reason: "cities/edges must be arrays" };
+  const citySet = new Set(cities);
+  if (citySet.size !== cities.length) return { ok: false, reason: "duplicate cities" };
+  for (const c of cities) if (typeof c !== "string" || !c.trim()) return { ok: false, reason: "invalid city entry" };
+  for (const e of edges) {
+    const { from, to, distance } = e ?? {};
+    if (!citySet.has(from) || !citySet.has(to)) return { ok: false, reason: "edge references unknown city" };
+    if (!Number.isFinite(distance) || distance < 0) return { ok: false, reason: "invalid distance" };
+  }
+  return { ok: true };
+}
+
+export function buildGraph(cities, edges) {
+  const g = new Graph();
+  for (const c of cities) g.addCity(c);
+  for (const { from, to, distance } of edges) g.addEdge(from, to, distance);
+  return g;
+}
+
+// Returns nearby cities within <= maxDistance (direct connections only, for MVP)
+export function getNearbyCities(graph, destination, maxDistanceKm = 250) {
+  if (!(graph instanceof Graph)) throw new Error("graph must be Graph");
+  if (typeof destination !== "string" || !graph.adj.has(destination)) return [];
+  const neighbors = graph.neighbors(destination);
+  return neighbors
+    .filter(n => n.distance <= maxDistanceKm)
+    .sort((a,b) => a.distance - b.distance)
+    .map(n => ({ city: n.to, distance: n.distance }));
+}
+
+// Sample dataset (you can replace or expand)
+export const sampleData = {
+  cities: [
+    "Guadalajara", "Tlaquepaque", "Zapopan", "Tepatitlán", "Lagos de Moreno", "Tala", "Tequila"
+  ],
+  edges: [
+    { from: "Guadalajara", to: "Zapopan", distance: 12 },
+    { from: "Guadalajara", to: "Tlaquepaque", distance: 10 },
+    { from: "Guadalajara", to: "Tepatitlán", distance: 78 },
+    { from: "Guadalajara", to: "Tequila", distance: 60 },
+    { from: "Zapopan", to: "Tala", distance: 35 },
+    { from: "Tepatitlán", to: "Lagos de Moreno", distance: 85 }
+  ]
+};
+
+ 
+--- C:\code-repos\BookingMx-Testing\frontend\js\pom.xml --- 
+
+ 
+--- C:\code-repos\BookingMx-Testing\frontend\js\test\api.test.js --- 
+import {
+  listReservations,
+  createReservation,
+  updateReservation,
+  cancelReservation
+} from "../api.js";
+
+import { jest } from "@jest/globals";
+
+beforeAll(() => {
+  global.fetch = jest.fn();
+});
+
+beforeEach(() => {
+  jest.clearAllMocks();
+});
+
+describe("api.js", () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
+  describe("listReservations", () => {
+    test("should return reservations on success", async () => {
+      fetch.mockResolvedValueOnce({
+        ok: true,
+        json: () => Promise.resolve([{ id: 1 }])
+      });
+
+      const result = await listReservations();
+
+      expect(result).toEqual([{ id: 1 }]);
+      expect(fetch).toHaveBeenCalledWith("http://localhost:8080/api/reservations");
+    });
+
+    test("should throw an error on failure", async () => {
+      fetch.mockResolvedValueOnce({ ok: false });
+      await expect(listReservations()).rejects.toThrow("Failed to fetch reservations");
+    });
+  });
+
+  describe("createReservation", () => {
+    const payload = { guest: "John" };
+
+    test("should create a reservation successfully", async () => {
+      fetch.mockResolvedValueOnce({
+        ok: true,
+        json: () => Promise.resolve({ id: 1 })
+      });
+
+      const result = await createReservation(payload);
+
+      expect(result.id).toBe(1);
+      expect(fetch).toHaveBeenCalledWith(
+        "http://localhost:8080/api/reservations",
+        expect.objectContaining({
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload)
+        })
+      );
+    });
+
+    test("should throw error with message when server returns message", async () => {
+      fetch.mockResolvedValueOnce({
+        ok: false,
+        json: () => Promise.resolve({ message: "Error message" })
+      });
+
+      await expect(createReservation({})).rejects.toThrow("Error message");
+    });
+
+    test("should throw generic error when no message returned", async () => {
+      fetch.mockResolvedValueOnce({
+        ok: false,
+        json: () => Promise.resolve({})
+      });
+
+      await expect(createReservation({})).rejects.toThrow("Create failed");
+    });
+  });
+
+  describe("updateReservation", () => {
+    test("should update a reservation successfully", async () => {
+      fetch.mockResolvedValueOnce({
+        ok: true,
+        json: () => Promise.resolve({ updated: true })
+      });
+
+      const result = await updateReservation(5, { a: 1 });
+
+      expect(result.updated).toBe(true);
+      expect(fetch).toHaveBeenCalledWith(
+        "http://localhost:8080/api/reservations/5",
+        expect.objectContaining({ method: "PUT" })
+      );
+    });
+
+    test("should throw error with message when server returns message", async () => {
+      fetch.mockResolvedValueOnce({
+        ok: false,
+        json: () => Promise.resolve({ message: "Bad update" })
+      });
+
+      await expect(updateReservation("5", {})).rejects.toThrow("Bad update");
+    });
+  });
+
+  describe("cancelReservation", () => {
+    test("should cancel a reservation successfully", async () => {
+      fetch.mockResolvedValueOnce({
+        ok: true,
+        json: () => Promise.resolve({ deleted: true })
+      });
+
+      const result = await cancelReservation(9);
+      expect(result.deleted).toBe(true);
+    });
+
+    test("should throw error with message when server returns message", async () => {
+      fetch.mockResolvedValueOnce({
+        ok: false,
+        json: () => Promise.resolve({ message: "Cannot cancel" })
+      });
+
+      await expect(cancelReservation("x")).rejects.toThrow("Cannot cancel");
+    });
+
+    test("should throw generic error when no message returned", async () => {
+      fetch.mockResolvedValueOnce({
+        ok: false,
+        json: () => Promise.resolve({})
+      });
+
+      await expect(cancelReservation("x")).rejects.toThrow("Cancel failed");
+    });
+  });
+});
+
+ 
+--- C:\code-repos\BookingMx-Testing\frontend\js\test\graph.test.js --- 
+import {
+  Graph,
+  validateGraphData,
+  buildGraph,
+  getNearbyCities,
+  sampleData
+} from "../graph.js";
+
+describe("Graph class", () => {
+  test("should initialize with empty adjacency map", () => {
+    const g = new Graph();
+    expect(g.adj).toBeInstanceOf(Map);
+    expect(g.adj.size).toBe(0);
+  });
+
+  test("addCity adds a valid city", () => {
+    const g = new Graph();
+    g.addCity("A");
+    expect(g.adj.has("A")).toBe(true);
+    expect(g.adj.get("A")).toEqual([]);
+  });
+
+  test("addCity throws for invalid name", () => {
+    const g = new Graph();
+    expect(() => g.addCity("")).toThrow("Invalid city name");
+    expect(() => g.addCity(null)).toThrow("Invalid city name");
+  });
+
+  test("addEdge connects two existing cities", () => {
+    const g = new Graph();
+    g.addCity("A");
+    g.addCity("B");
+    g.addEdge("A", "B", 10);
+
+    expect(g.adj.get("A")).toEqual([{ to: "B", distance: 10 }]);
+    expect(g.adj.get("B")).toEqual([{ to: "A", distance: 10 }]);
+  });
+
+  test("addEdge throws for unknown cities or invalid distance", () => {
+    const g = new Graph();
+    g.addCity("A");
+
+    expect(() => g.addEdge("A", "B", 10)).toThrow("Unknown city");
+    g.addCity("B");
+    expect(() => g.addEdge("A", "B", -1)).toThrow("Invalid distance");
+  });
+
+  test("neighbors returns connected cities", () => {
+    const g = new Graph();
+    g.addCity("A");
+    g.addCity("B");
+    g.addEdge("A", "B", 5);
+
+    expect(g.neighbors("A")).toEqual([{ to: "B", distance: 5 }]);
+  });
+
+  test("neighbors throws for unknown city", () => {
+    const g = new Graph();
+    expect(() => g.neighbors("X")).toThrow("Unknown city");
+  });
+});
+
+describe("validateGraphData", () => {
+  test("returns ok for valid data", () => {
+    const valid = {
+      cities: ["A", "B"],
+      edges: [{ from: "A", to: "B", distance: 10 }]
+    };
+    expect(validateGraphData(valid)).toEqual({ ok: true });
+  });
+
+  test("fails if cities or edges not arrays", () => {
+    expect(validateGraphData({ cities: {}, edges: [] }).ok).toBe(false);
+    expect(validateGraphData({ cities: [], edges: null }).ok).toBe(false);
+  });
+
+  test("fails on duplicate cities", () => {
+    const data = { cities: ["A", "A"], edges: [] };
+    expect(validateGraphData(data)).toEqual({ ok: false, reason: "duplicate cities" });
+  });
+
+  test("fails on invalid city entry", () => {
+    const data = { cities: ["A", ""], edges: [] };
+    expect(validateGraphData(data)).toEqual({ ok: false, reason: "invalid city entry" });
+  });
+
+  test("fails on unknown edge cities or invalid distance", () => {
+    const data1 = { cities: ["A"], edges: [{ from: "A", to: "B", distance: 5 }] };
+    expect(validateGraphData(data1)).toEqual({ ok: false, reason: "edge references unknown city" });
+
+    const data2 = { cities: ["A", "B"], edges: [{ from: "A", to: "B", distance: -1 }] };
+    expect(validateGraphData(data2)).toEqual({ ok: false, reason: "invalid distance" });
+  });
+});
+
+describe("buildGraph", () => {
+  test("constructs graph correctly", () => {
+    const cities = ["A", "B"];
+    const edges = [{ from: "A", to: "B", distance: 5 }];
+    const g = buildGraph(cities, edges);
+
+    expect(g).toBeInstanceOf(Graph);
+    expect(g.adj.has("A")).toBe(true);
+    expect(g.adj.has("B")).toBe(true);
+    expect(g.neighbors("A")).toEqual([{ to: "B", distance: 5 }]);
+  });
+});
+
+describe("getNearbyCities", () => {
+  test("returns nearby cities within max distance", () => {
+    const g = new Graph();
+    g.addCity("A");
+    g.addCity("B");
+    g.addCity("C");
+    g.addEdge("A", "B", 50);
+    g.addEdge("A", "C", 300);
+
+    const result = getNearbyCities(g, "A", 200);
+    expect(result).toEqual([{ city: "B", distance: 50 }]);
+  });
+
+  test("returns empty for invalid graph or city", () => {
+    const g = new Graph();
+    g.addCity("A");
+    expect(() => getNearbyCities({}, "A")).toThrow("graph must be Graph");
+    expect(getNearbyCities(g, "Unknown")).toEqual([]);
+  });
+
+  test("returns sorted nearby cities", () => {
+    const g = new Graph();
+    g.addCity("A");
+    g.addCity("B");
+    g.addCity("C");
+    g.addEdge("A", "B", 150);
+    g.addEdge("A", "C", 100);
+
+    const result = getNearbyCities(g, "A", 200);
+    expect(result).toEqual([
+      { city: "C", distance: 100 },
+      { city: "B", distance: 150 }
+    ]);
+  });
+});
+
+describe("sampleData", () => {
+  test("contains valid structure", () => {
+    expect(Array.isArray(sampleData.cities)).toBe(true);
+    expect(Array.isArray(sampleData.edges)).toBe(true);
+    expect(sampleData.edges[0]).toHaveProperty("from");
+    expect(sampleData.edges[0]).toHaveProperty("to");
+    expect(sampleData.edges[0]).toHaveProperty("distance");
+  });
+});
+ 
+--- C:\code-repos\BookingMx-Testing\frontend\js\test\pom.xml --- 
+
