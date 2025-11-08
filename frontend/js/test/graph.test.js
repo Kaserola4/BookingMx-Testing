@@ -141,3 +141,13 @@ describe("getNearbyCities", () => {
     ]);
   });
 });
+
+describe("sampleData", () => {
+  test("contains valid structure", () => {
+    expect(Array.isArray(sampleData.cities)).toBe(true);
+    expect(Array.isArray(sampleData.edges)).toBe(true);
+    expect(sampleData.edges[0]).toHaveProperty("from");
+    expect(sampleData.edges[0]).toHaveProperty("to");
+    expect(sampleData.edges[0]).toHaveProperty("distance");
+  });
+});
