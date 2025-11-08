@@ -7,18 +7,29 @@ import com.bookingmx.reservations.repo.ReservationRepository;
 import com.bookingmx.reservations.exception.BadRequestException;
 import com.bookingmx.reservations.exception.NotFoundException;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class ReservationService {
-    private final ReservationRepository repo = new ReservationRepository();
+    private final ReservationRepository repo;
+
+    public ReservationService(ReservationRepository repo) {
+        this.repo = repo;
+    }
 
     public List<Reservation> list() {
         return repo.findAll();
     }
+
+    public Optional<Reservation> getById(Long id) {
+        return repo.findById(id);
+    }
+
 
     public Reservation create(ReservationRequest req) {
         validateDates(req.getCheckIn(), req.getCheckOut());
@@ -45,8 +56,8 @@ public class ReservationService {
 
     private void validateDates(LocalDate in, LocalDate out) {
         if (in == null || out == null) throw new BadRequestException("Dates cannot be null");
-        if (!out.isAfter(in)) throw new BadRequestException("Check-out must be after check-in");
         if (in.isBefore(LocalDate.now())) throw new BadRequestException("Check-in must be in the future");
         if (out.isBefore(LocalDate.now())) throw new BadRequestException("Check-out must be in the future");
+        if (!out.isAfter(in)) throw new BadRequestException("Check-out must be after check-in");
     }
 }
