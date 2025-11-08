@@ -11,15 +11,12 @@ public class Reservation {
     private LocalDate checkOut;
     private ReservationStatus status = ReservationStatus.ACTIVE;
 
-    public Reservation() {}
-
     public Reservation(Long id, String guestName, String hotelName, LocalDate checkIn, LocalDate checkOut) {
         this.id = id;
         this.guestName = guestName;
         this.hotelName = hotelName;
         this.checkIn = checkIn;
         this.checkOut = checkOut;
-        this.status = ReservationStatus.ACTIVE;
     }
 
     public Long getId() { return id; }
@@ -39,10 +36,12 @@ public class Reservation {
 
     @Override public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof Reservation)) return false;
-        Reservation that = (Reservation) o;
+        if (!(o instanceof Reservation that)) return false;
         return Objects.equals(id, that.id);
     }
 
-    @Override public int hashCode() { return Objects.hash(id); }
+    @Override
+    public int hashCode() {
+        return Objects.hash(id);
+    }
 }
