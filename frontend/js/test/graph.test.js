@@ -106,3 +106,38 @@ describe("buildGraph", () => {
   });
 });
 
+describe("getNearbyCities", () => {
+  test("returns nearby cities within max distance", () => {
+    const g = new Graph();
+    g.addCity("A");
+    g.addCity("B");
+    g.addCity("C");
+    g.addEdge("A", "B", 50);
+    g.addEdge("A", "C", 300);
+
+    const result = getNearbyCities(g, "A", 200);
+    expect(result).toEqual([{ city: "B", distance: 50 }]);
+  });
+
+  test("returns empty for invalid graph or city", () => {
+    const g = new Graph();
+    g.addCity("A");
+    expect(() => getNearbyCities({}, "A")).toThrow("graph must be Graph");
+    expect(getNearbyCities(g, "Unknown")).toEqual([]);
+  });
+
+  test("returns sorted nearby cities", () => {
+    const g = new Graph();
+    g.addCity("A");
+    g.addCity("B");
+    g.addCity("C");
+    g.addEdge("A", "B", 150);
+    g.addEdge("A", "C", 100);
+
+    const result = getNearbyCities(g, "A", 200);
+    expect(result).toEqual([
+      { city: "C", distance: 100 },
+      { city: "B", distance: 150 }
+    ]);
+  });
+});
