@@ -108,6 +108,11 @@ public class ReservationSteps extends CucumberTestContextConfiguration {
         request.setCheckOut(LocalDate.now().plusDays(3));
     }
 
+    @Given("I have a non-existing reservation ID")
+    public void iHaveANonExistingReservationID() {
+        reservationId = 12345L;
+    }
+
     // ==================== WHEN Steps ====================
 
     @When("I create a reservation")
@@ -163,6 +168,14 @@ public class ReservationSteps extends CucumberTestContextConfiguration {
         }
     }
 
+    @When("I attempt to cancel the reservation")
+    public void iAttemptToCancelTheReservation() {
+        try {
+            reservationService.cancel(reservationId);
+        } catch (Exception e) {
+            thrownException = e;
+        }
+    }
 
     // ==================== THEN Steps ====================
 
@@ -262,6 +275,13 @@ public class ReservationSteps extends CucumberTestContextConfiguration {
                 "Expected message to contain: " + expectedMessage);
     }
 
+    @Then("the cancellation should fail with {string}")
+    public void theCancellationShouldFailWith(String expectedMessage) {
+        assertNotNull(thrownException, "An exception should have been thrown");
+        assertTrue(thrownException.getMessage().contains(expectedMessage),
+                "Expected message to contain: " + expectedMessage);
+    }
+
     // ==================== AND Steps ====================
 
     @And("the reservation should be stored in the system")
@@ -320,6 +340,18 @@ public class ReservationSteps extends CucumberTestContextConfiguration {
             thrownException = e;
         }
     }
+
+    @And("I cancel the reservation")
+    public void iCancelTheReservation() {
+        assertNotNull(response, "Must have created a reservation first");
+        try {
+            Reservation canceled = reservationService.cancel(response.getId());
+            response = toResponse(canceled);
+        } catch (Exception e) {
+            thrownException = e;
+        }
+    }
+
     // ==================== Helper Methods ====================
 
     /**
