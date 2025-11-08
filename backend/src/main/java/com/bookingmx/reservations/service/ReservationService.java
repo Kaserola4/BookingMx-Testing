@@ -45,8 +45,8 @@ public class ReservationService {
 
     private void validateDates(LocalDate in, LocalDate out) {
         if (in == null || out == null) throw new BadRequestException("Dates cannot be null");
-        if (!out.isAfter(in)) throw new BadRequestException("Check-out must be after check-in");
         if (in.isBefore(LocalDate.now())) throw new BadRequestException("Check-in must be in the future");
         if (out.isBefore(LocalDate.now())) throw new BadRequestException("Check-out must be in the future");
+        if (!out.isAfter(in)) throw new BadRequestException("Check-out must be after check-in");
     }
 }
