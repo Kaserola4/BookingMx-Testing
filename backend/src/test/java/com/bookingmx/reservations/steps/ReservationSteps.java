@@ -22,6 +22,9 @@ public class ReservationSteps extends CucumberTestContextConfiguration {
     private ReservationResponse response;
     private Exception thrownException;
 
+    private Long reservationId;
+    private ReservationResponse retrievedResponse;
+
     @Before
     public void setup() {
         request = new ReservationRequest();
@@ -121,6 +124,25 @@ public class ReservationSteps extends CucumberTestContextConfiguration {
     @When("I attempt to create the reservation")
     public void iAttemptToCreateTheReservation() {
         iAttemptToCreateAReservation();
+    }
+
+    @When("I list all reservations")
+    public void iListAllReservations() {
+        var list = reservationService.list();
+        assertNotNull(list, "List should not be null");
+        assertFalse(list.isEmpty(), "List should not be empty");
+    }
+
+    @When("I get the reservation by ID")
+    public void iGetTheReservationById() {
+        assertNotNull(response, "Must have created a reservation first");
+        reservationId = response.getId();
+        retrievedResponse = toResponse(
+                reservationService.list().stream()
+                        .filter(r -> r.getId().equals(reservationId))
+                        .findFirst()
+                        .orElse(null)
+        );
     }
 
     // ==================== THEN Steps ====================
