@@ -18,4 +18,4 @@ Feature: Cancel reservations
   Scenario: Fail to cancel a non-existing reservation
     Given I have a non-existing reservation ID
     When I attempt to cancel the reservation
-    Then the cancelation should fail with "Reservation not found"
+    Then the cancellation should fail with "Reservation not found"
