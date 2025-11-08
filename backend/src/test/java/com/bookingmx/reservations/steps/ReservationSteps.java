@@ -99,6 +99,15 @@ public class ReservationSteps extends CucumberTestContextConfiguration {
         request.setCheckIn(LocalDate.now().plusDays(1));
     }
 
+    @Given("I prepare a reservation update for a non-existing ID")
+    public void iPrepareAReservationUpdateForNonExistingId() {
+        reservationId = 999L;
+        request.setGuestName("Ghost");
+        request.setHotelName("Nowhere");
+        request.setCheckIn(LocalDate.now().plusDays(2));
+        request.setCheckOut(LocalDate.now().plusDays(3));
+    }
+
     // ==================== WHEN Steps ====================
 
     @When("I create a reservation")
@@ -144,6 +153,16 @@ public class ReservationSteps extends CucumberTestContextConfiguration {
                         .orElse(null)
         );
     }
+
+    @When("I attempt to update the reservation")
+    public void iAttemptToUpdateTheReservation() {
+        try {
+            reservationService.update(reservationId, request);
+        } catch (Exception e) {
+            thrownException = e;
+        }
+    }
+
 
     // ==================== THEN Steps ====================
 
@@ -230,6 +249,19 @@ public class ReservationSteps extends CucumberTestContextConfiguration {
         assertEquals(response.getGuestName(), retrievedResponse.getGuestName(), "Guest names should match");
         assertEquals(response.getHotelName(), retrievedResponse.getHotelName(), "Hotel names should match");
     }
+
+    @Then("the update should be successful")
+    public void theUpdateShouldBeSuccessful() {
+        assertNull(thrownException, "No exception should be thrown");
+    }
+
+    @Then("the update should fail with {string}")
+    public void theUpdateShouldFailWith(String expectedMessage) {
+        assertNotNull(thrownException, "An exception should have been thrown");
+        assertTrue(thrownException.getMessage().contains(expectedMessage),
+                "Expected message to contain: " + expectedMessage);
+    }
+
     // ==================== AND Steps ====================
 
     @And("the reservation should be stored in the system")
@@ -273,6 +305,21 @@ public class ReservationSteps extends CucumberTestContextConfiguration {
                 "Check-out date should match expected value");
     }
 
+    @And("I update the reservation hotel to {string}")
+    public void iUpdateTheReservationHotelTo(String newHotel) {
+        assertNotNull(response, "Must have created a reservation first");
+        try {
+            ReservationRequest updateReq = new ReservationRequest();
+            updateReq.setGuestName(response.getGuestName());
+            updateReq.setHotelName(newHotel);
+            updateReq.setCheckIn(response.getCheckIn());
+            updateReq.setCheckOut(response.getCheckOut());
+            Reservation updated = reservationService.update(response.getId(), updateReq);
+            response = toResponse(updated);
+        } catch (Exception e) {
+            thrownException = e;
+        }
+    }
     // ==================== Helper Methods ====================
 
     /**
