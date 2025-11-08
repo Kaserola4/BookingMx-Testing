@@ -92,3 +92,17 @@ describe("validateGraphData", () => {
     expect(validateGraphData(data2)).toEqual({ ok: false, reason: "invalid distance" });
   });
 });
+
+describe("buildGraph", () => {
+  test("constructs graph correctly", () => {
+    const cities = ["A", "B"];
+    const edges = [{ from: "A", to: "B", distance: 5 }];
+    const g = buildGraph(cities, edges);
+
+    expect(g).toBeInstanceOf(Graph);
+    expect(g.adj.has("A")).toBe(true);
+    expect(g.adj.has("B")).toBe(true);
+    expect(g.neighbors("A")).toEqual([{ to: "B", distance: 5 }]);
+  });
+});
+
