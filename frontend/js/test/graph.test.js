@@ -60,3 +60,35 @@ describe("Graph class", () => {
   });
 });
 
+describe("validateGraphData", () => {
+  test("returns ok for valid data", () => {
+    const valid = {
+      cities: ["A", "B"],
+      edges: [{ from: "A", to: "B", distance: 10 }]
+    };
+    expect(validateGraphData(valid)).toEqual({ ok: true });
+  });
+
+  test("fails if cities or edges not arrays", () => {
+    expect(validateGraphData({ cities: {}, edges: [] }).ok).toBe(false);
+    expect(validateGraphData({ cities: [], edges: null }).ok).toBe(false);
+  });
+
+  test("fails on duplicate cities", () => {
+    const data = { cities: ["A", "A"], edges: [] };
+    expect(validateGraphData(data)).toEqual({ ok: false, reason: "duplicate cities" });
+  });
+
+  test("fails on invalid city entry", () => {
+    const data = { cities: ["A", ""], edges: [] };
+    expect(validateGraphData(data)).toEqual({ ok: false, reason: "invalid city entry" });
+  });
+
+  test("fails on unknown edge cities or invalid distance", () => {
+    const data1 = { cities: ["A"], edges: [{ from: "A", to: "B", distance: 5 }] };
+    expect(validateGraphData(data1)).toEqual({ ok: false, reason: "edge references unknown city" });
+
+    const data2 = { cities: ["A", "B"], edges: [{ from: "A", to: "B", distance: -1 }] };
+    expect(validateGraphData(data2)).toEqual({ ok: false, reason: "invalid distance" });
+  });
+});
