@@ -218,6 +218,18 @@ public class ReservationSteps extends CucumberTestContextConfiguration {
                 "Stay duration should match expected nights");
     }
 
+    @Then("I should see at least one reservation")
+    public void iShouldSeeAtLeastOneReservation() {
+        assertFalse(reservationService.list().isEmpty(), "There should be at least one reservation");
+    }
+
+    @Then("the retrieved reservation should match the created one")
+    public void theRetrievedReservationShouldMatchTheCreatedOne() {
+        assertNotNull(retrievedResponse, "Retrieved reservation should not be null");
+        assertEquals(response.getId(), retrievedResponse.getId(), "IDs should match");
+        assertEquals(response.getGuestName(), retrievedResponse.getGuestName(), "Guest names should match");
+        assertEquals(response.getHotelName(), retrievedResponse.getHotelName(), "Hotel names should match");
+    }
     // ==================== AND Steps ====================
 
     @And("the reservation should be stored in the system")
