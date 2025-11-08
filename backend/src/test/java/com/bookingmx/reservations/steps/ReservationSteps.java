@@ -22,6 +22,9 @@ public class ReservationSteps extends CucumberTestContextConfiguration {
     private ReservationResponse response;
     private Exception thrownException;
 
+    private Long reservationId;
+    private ReservationResponse retrievedResponse;
+
     @Before
     public void setup() {
         request = new ReservationRequest();
@@ -123,6 +126,25 @@ public class ReservationSteps extends CucumberTestContextConfiguration {
         iAttemptToCreateAReservation();
     }
 
+    @When("I list all reservations")
+    public void iListAllReservations() {
+        var list = reservationService.list();
+        assertNotNull(list, "List should not be null");
+        assertFalse(list.isEmpty(), "List should not be empty");
+    }
+
+    @When("I get the reservation by ID")
+    public void iGetTheReservationById() {
+        assertNotNull(response, "Must have created a reservation first");
+        reservationId = response.getId();
+        retrievedResponse = toResponse(
+                reservationService.list().stream()
+                        .filter(r -> r.getId().equals(reservationId))
+                        .findFirst()
+                        .orElse(null)
+        );
+    }
+
     // ==================== THEN Steps ====================
 
     @Then("the reservation should be created successfully")
@@ -196,6 +218,18 @@ public class ReservationSteps extends CucumberTestContextConfiguration {
                 "Stay duration should match expected nights");
     }
 
+    @Then("I should see at least one reservation")
+    public void iShouldSeeAtLeastOneReservation() {
+        assertFalse(reservationService.list().isEmpty(), "There should be at least one reservation");
+    }
+
+    @Then("the retrieved reservation should match the created one")
+    public void theRetrievedReservationShouldMatchTheCreatedOne() {
+        assertNotNull(retrievedResponse, "Retrieved reservation should not be null");
+        assertEquals(response.getId(), retrievedResponse.getId(), "IDs should match");
+        assertEquals(response.getGuestName(), retrievedResponse.getGuestName(), "Guest names should match");
+        assertEquals(response.getHotelName(), retrievedResponse.getHotelName(), "Hotel names should match");
+    }
     // ==================== AND Steps ====================
 
     @And("the reservation should be stored in the system")
