@@ -1,6 +1,5 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0"
-         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
                              https://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
@@ -122,8 +121,7 @@
                     <useModulePath>false</useModulePath>
                     <!-- Enable JUnit Platform for Cucumber -->
                     <properties>
-                        <configurationParameters>
-                            cucumber.junit-platform.naming-strategy=long
+                        <configurationParameters> cucumber.junit-platform.naming-strategy=long
                         </configurationParameters>
                     </properties>
                 </configuration>
@@ -175,6 +173,30 @@
                     </execution>
                 </executions>
             </plugin>
+            <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-javadoc-plugin</artifactId>
+            <version>3.6.0</version>
+            <configuration>
+                <show>private</show>
+                <nohelp>true</nohelp>
+                <charset>UTF-8</charset>
+                <encoding>UTF-8</encoding>
+                <docencoding>UTF-8</docencoding>
+                <additionalOptions>
+                    <additionalOption>-html5</additionalOption>
+                </additionalOptions>
+            </configuration>
+            <executions>
+                <execution>
+                    <id>attach-javadocs</id>
+                    <goals>
+                        <goal>jar</goal>
+                    </goals>
+                </execution>
+            </executions>
+        </plugin>
         </plugins>
+        
     </build>
 </project>
