@@ -3,6 +3,18 @@ package com.bookingmx.reservations.dto;
 import com.bookingmx.reservations.model.ReservationStatus;
 import java.time.LocalDate;
 
+/**
+ * Data Transfer Object for reservation responses.
+ * <p>
+ * This immutable class represents the data returned to clients
+ * when querying reservations. It includes all reservation details
+ * including the unique identifier and current status.
+ * </p>
+ * 
+ * @author BookingMx Team
+ * @version 1.0.0
+ * @since 1.0.0
+ */
 public class ReservationResponse {
     private Long id;
     private String guestName;
