@@ -7,6 +7,21 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
 
+/**
+ * In-memory repository for reservation persistence.
+ * <p>
+ * This repository provides thread-safe storage for reservations using
+ * a ConcurrentHashMap. It simulates database behavior with auto-incrementing
+ * IDs. Suitable for development and testing purposes.
+ * </p>
+ * 
+ * <h3>Thread Safety:</h3>
+ * All operations are thread-safe using concurrent collections.
+ * 
+ * @author BookingMx Team
+ * @version 1.0.0
+ * @since 1.0.0
+ */
 @Repository
 public class ReservationRepository {
     private final Map<Long, Reservation> store = new ConcurrentHashMap<>();
