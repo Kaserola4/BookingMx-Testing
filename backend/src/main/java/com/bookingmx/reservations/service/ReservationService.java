@@ -14,6 +14,26 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
+/**
+ * Service class for managing reservation business logic.
+ * <p>
+ * This service handles all business operations related to reservations
+ * including creation, updates, cancellation, and retrieval. It enforces
+ * business rules such as date validation and status checks.
+ * </p>
+ * 
+ * <h3>Business Rules:</h3>
+ * <ul>
+ *   <li>Check-in and check-out dates must be in the future</li>
+ *   <li>Check-out must be after check-in</li>
+ *   <li>Canceled reservations cannot be updated</li>
+ *   <li>All dates must be non-null</li>
+ * </ul>
+ * 
+ * @author BookingMx Team
+ * @version 1.0.0
+ * @since 1.0.0
+ */
 @Service
 public class ReservationService {
     private final ReservationRepository repo;
