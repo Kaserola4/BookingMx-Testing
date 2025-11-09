@@ -5,6 +5,27 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import java.time.LocalDate;
 
+/**
+ * Data Transfer Object for reservation creation and update requests.
+ * <p>
+ * This class represents the input data required to create or update
+ * a reservation. All fields are validated using Jakarta Bean Validation
+ * annotations to ensure data integrity.
+ * </p>
+ * 
+ * <h3>Validation Rules:</h3>
+ * <ul>
+ *   <li>Guest name must not be blank</li>
+ *   <li>Hotel name must not be blank</li>
+ *   <li>Check-in date must be in the future</li>
+ *   <li>Check-out date must be in the future</li>
+ * </ul>
+ * 
+ * @author BookingMx Team
+ * @version 1.0.0
+ * @since 1.0.0
+ * @see jakarta.validation.constraints
+ */
 public class ReservationRequest {
 
     @NotBlank(message = "Guest name cannot be blank")
