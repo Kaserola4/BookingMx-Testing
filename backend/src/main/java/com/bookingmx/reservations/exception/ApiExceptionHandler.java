@@ -10,6 +10,26 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+/**
+ * Global exception handler for the BookingMx API.
+ * <p>
+ * This class intercepts exceptions thrown by controllers and converts
+ * them into appropriate HTTP responses with structured error messages.
+ * It handles validation errors, business exceptions, and unexpected errors.
+ * </p>
+ * 
+ * <h3>Handled Exception Types:</h3>
+ * <ul>
+ *   <li><b>BadRequestException</b> - Returns 400 with error message</li>
+ *   <li><b>NotFoundException</b> - Returns 404 with error message</li>
+ *   <li><b>MethodArgumentNotValidException</b> - Returns 400 with field errors</li>
+ *   <li><b>Generic Exception</b> - Returns 500 with error details</li>
+ * </ul>
+ * 
+ * @author BookingMx Team
+ * @version 1.0.0
+ * @since 1.0.0
+ */
 @RestControllerAdvice
 public class ApiExceptionHandler {
 
